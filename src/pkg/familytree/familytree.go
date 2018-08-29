@@ -3,70 +3,153 @@ package main
 //partially adapted from https://blog.serverbooter.com/post/parsing-nested-json-in-go/
 
 import (
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"reflect"
+
+	"github.com/gocarina/gocsv"
 )
 
-func iterate(data interface{}) interface{} {
+// Node - family node struct
+type Node struct {
+	ID            string `csv:"FamilyID"`
+	Name          string `csv:"Name"`
+	Gender        string `csv:"Gender"`
+	Partner       string `csv:"Partner"`
+	PartnerGender string `csv:"PartnerGender"`
+	ParentID      string `csv:"ParentID"`
+	children      []*Node
+}
 
-	fmt.Printf("data kind is %v", reflect.ValueOf(data).Kind())
-	if reflect.ValueOf(data).Kind() == reflect.Slice {
-		d := reflect.ValueOf(data)
-		tmpData := make([]interface{}, d.Len())
-		returnSlice := make([]interface{}, d.Len())
-		for i := 0; i < d.Len(); i++ {
-			tmpData[i] = d.Index(i).Interface()
+var (
+	familyTree  map[string]*Node
+	familyTable []*Node
+	root        *Node
+	brothers    map[string][]string
+	sisters     map[string][]string
+)
+
+const MALE = "male"
+const FEMALE = "female"
+
+// Populate - retrieve data from CSV and build family tree data structure
+func Populate() {
+	dataFile, err := os.OpenFile("familytree.csv", os.O_RDONLY, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+	defer dataFile.Close()
+
+	familyTable = []*Node{}
+	if err := gocsv.UnmarshalFile(dataFile, &familyTable); err != nil { // Load clients from file
+		panic(err)
+	}
+
+	familyTree = make(map[string]*Node)
+	for _, family := range familyTable {
+		fmt.Println("Hello", family.ID, family.Name, family.Gender)
+		familyTree[family.ID] = family
+	}
+
+	//set up tree
+	for _, family := range familyTree {
+		if family.ParentID != "0" {
+			_, ok := familyTree[family.ParentID]
+			if ok {
+				familyTree[family.ParentID].children = append(familyTree[family.ParentID].children, family)
+			}
+		} else {
+			root = family //upper-most family found
 		}
-		for i, v := range tmpData {
-			returnSlice[i] = iterate(v)
-		}
-		return returnSlice
-	} else if string(reflect.ValueOf(data).Kind()) == "map" {
-		d := reflect.ValueOf(data)
-		tmpData := make(map[string]interface{})
-		for _, k := range d.MapKeys() {
-			typeOfValue := reflect.TypeOf(d.MapIndex(k).Interface()).Kind()
-			if typeOfValue == reflect.Map || typeOfValue == reflect.Slice {
-				tmpData[k.String()] = iterate(d.MapIndex(k).Interface())
-			} else {
-				tmpData[k.String()] = d.MapIndex(k).Interface()
+	}
+
+	//set up brothers and sisters
+	brothers = make(map[string][]string)
+	sisters = make(map[string][]string)
+	for _, family := range familyTree {
+		if len(family.children) > 0 {
+			for _, child := range family.children {
+				if child.Gender == "male" {
+					brothers[family.ID] = append(brothers[family.ID], child.Name)
+				} else {
+					sisters[family.ID] = append(sisters[family.ID], child.Name)
+				}
 			}
 		}
-		return tmpData
 	}
-	return data
+
+	if root.ID == "" {
+		panic("Upper-most / highest parent family not found")
+	}
+}
+
+func unclesAndaunts(member string, expectedParentGender string, siblingsGender string) []string {
+	for _, family := range familyTree {
+		if member == family.Name || member == family.Partner {
+			if family.ParentID != "0" {
+				if familyTree[family.ParentID].ParentID != "0" {
+					if familyTree[family.ParentID].Gender == expectedParentGender {
+						upperParentID := familyTree[family.ParentID].ParentID
+						if siblingsGender == MALE {
+							if _, ok := brothers[upperParentID]; ok {
+								return brothers[upperParentID]
+							}
+						} else {
+							if _, ok := sisters[upperParentID]; ok {
+								return sisters[upperParentID]
+							}
+						}
+					}
+				}
+			}
+		}
+		return nil
+	}
+	return nil
+}
+
+func brothersAndsisters(member string, siblingsGender string) []string {
+	for _, family := range familyTree {
+		if member == family.Name || member == family.Partner {
+			if family.ParentID != "0" {
+				var sibLings []string
+				for _, child := range familyTree[family.ParentID].children {
+					if child.Name != member && child.Partner != member {
+						if child.Partner != "" {
+							if siblingsGender == child.PartnerGender {
+								sibLings = append(sibLings, child.Partner)
+							}
+						}
+						if siblingsGender == child.Gender {
+							sibLings = append(sibLings, child.Gender)
+						}
+					}
+				}
+				return sibLings
+			}
+		}
+	}
+	return nil
+}
+
+func search(member string, relationShip string) []string {
+	switch relationShip {
+	case "paternalUncle":
+		return unclesAndaunts(member, MALE, MALE)
+	case "paternalAunt":
+		return unclesAndaunts(member, MALE, FEMALE)
+	case "maternalAunt":
+		return unclesAndaunts(member, FEMALE, FEMALE)
+	case "maternalUncle":
+		return unclesAndaunts(member, FEMALE, MALE)
+	case "brotherInLaw":
+		return brothersAndsisters(member, MALE)
+	case "sisterinLaw":
+		return brothersAndsisters(member, FEMALE)
+	default:
+		return nil
+	}
 }
 
 func main() {
-	// Open our jsonFile
-	jsonFile, err := os.Open("familytree.json")
-	// if we os.Open returns an error then handle it
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	data, err := ioutil.ReadAll(jsonFile)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//myJSON := string(file)
-
-	var myJSON interface{}
-	err = json.Unmarshal(data, &myJSON)
-	fmt.Printf("%v: ", myJSON)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	m, _ := myJSON.(map[string]interface{})
-	newM := iterate(m)
-	jsonBytes, err := json.Marshal(newM)
-	if err != nil {
-		fmt.Println(err)
-	}
-	fmt.Println(string(jsonBytes))
-
+	Populate()
 }

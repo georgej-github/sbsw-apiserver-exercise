@@ -1,0 +1,18 @@
+FamilyID,Name,Gender,Partner,PartnerGender,ParentID
+F001,King Shan,male,Queen Anga,female,0
+F002,Ish,male,,,F001
+F003,Chit,male,Ambi,female,F001
+F004,Vich,male,Lika,female,F001
+F005,Saty,female,Vya,male,F001
+F006,Vrita,male,,,F003
+F007,Drita,male,Jaya,female,F003
+F008,Jata,male,,,F007
+F009,Driya,female,Mnu,male,F007
+F010,Chika,female,Kpila,male,F004
+F011,Vila,male,Jnki,female,F004
+F012,Lavnya,female,Gru,male,F0011
+F013,Satvy,female,Asva,male,F005
+F014,Savya,male,Krpi,female,F005
+F015,Saayan,male,Mina,female,F005
+F016,Kriya,male,,,F014
+F017,Misa,male,,,F015
