@@ -1,7 +1,7 @@
 #!/bin/sh
 
 DOCKER_IMAGE=test
-DOCKER_REPO=test
+DOCKER_REPO=k8s.local:5000
 IMAGE_VERSION=latest
 
 #git pull https://github.com/georgej-github.com/sbsw-apiserver-exercise.git
@@ -10,7 +10,7 @@ IMAGE_VERSION=latest
 
 set -x
 
-docker build -t $DOCKER_IMAGE -f ../docker/Dockerfile ../
+docker build -t $DOCKER_IMAGE -f ./docker/Dockerfile ./
 
 docker tag $DOCKER_IMAGE $DOCKER_REPO/$DOCKER_IMAGE:$IMAGE_VERSION
 docker push $DOCKER_REPO/$DOCKER_IMAGE:$IMAGE_VERSION
