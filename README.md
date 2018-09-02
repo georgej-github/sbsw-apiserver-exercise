@@ -19,7 +19,7 @@ Oncee the script is updated with required variables / external IP/port details, 
 
 ## Other details ##
 
-Part 1 - Problem 1 code in `src/`
-Part 2 - Dockerfile in `docker/`
-Part 3 - Kube Configuration file / manifest in `manifests/`
-Part 4 - Deployment script at `automation/setup.sh`
+* Part 1 - Problem 1 code in `src/`
+* Part 2 - Dockerfile in `docker/`
+* Part 3 - Kube Configuration file / manifest in `manifests/`
+* Part 4 - Deployment script at `automation/setup.sh`
