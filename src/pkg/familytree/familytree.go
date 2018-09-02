@@ -1,7 +1,5 @@
 package main
 
-//partially adapted from https://blog.serverbooter.com/post/parsing-nested-json-in-go/
-
 import (
 	"fmt"
 	"os"
