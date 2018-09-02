@@ -8,6 +8,8 @@ WORKDIR /go/src/github.com/sbsw-apiserver-exercise
 
 COPY . ./
 
+COPY src/data/familytree.csv /familytree.csv
+
 RUN GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o /apiserver src/*.go
 
 
@@ -18,6 +20,7 @@ FROM alpine:3.5
 RUN apk update && apk add ca-certificates
 
 COPY --from=builder /apiserver /usr/bin/apiserver
+COPY --from=builder /familytree.csv /familytree.csv
 RUN chmod +x /usr/bin/apiserver
 
-ENTRYPOINT ["/usr/bin/apiserver"]
+CMD sh -c "FAMILY_TREE_DATA_PATH=/familytree.csv /usr/bin/apiserver"

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
@@ -33,13 +34,23 @@ func handleQryMessage(w http.ResponseWriter, r *http.Request) {
 	person := vars.Get("Person")
 	relation := vars.Get("Relation")
 
+	if person == "" {
+		json.NewEncoder(w).Encode(map[string]string{"fail": "Parameter 'Person' not specified in query string"})
+		return
+	}
+
+	if relation == "" {
+		json.NewEncoder(w).Encode(map[string]string{"fail": "Parameter 'Relation' not specified in query string"})
+		return
+	}
+
 	fmt.Printf("Searching for %s %s\n", person, relation)
 	relatives := search(person, relation)
 	if relatives == nil || len(relatives) == 0 {
 		relatives = append(relatives, "none")
 	}
 
-	json.NewEncoder(w).Encode(map[string][]string{"message": relatives})
+	json.NewEncoder(w).Encode(map[string][]string{strings.ToLower(relation): relatives})
 
 	//json.NewEncoder(w).Encode(map[string]string{"message": message})
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/gocarina/gocsv"
 )
@@ -36,7 +37,10 @@ const (
 
 // Populate - retrieve data from CSV and build family tree data structure
 func Populate() {
-	dataFile, err := os.OpenFile("data/familytree.csv", os.O_RDONLY, os.ModePerm)
+	if len(os.Getenv("FAMILY_TREE_DATA_PATH")) == 0 {
+		panic("Environment variable FAMILY_TREE_DATA_PATH not defined, cannot find data for family tree.")
+	}
+	dataFile, err := os.OpenFile(os.Getenv("FAMILY_TREE_DATA_PATH"), os.O_RDONLY, os.ModePerm)
 	if err != nil {
 		panic(err)
 	}
@@ -271,19 +275,20 @@ func cousins(member string) []string {
 }
 
 func search(member string, relationShip string) []string {
+	relationShip = strings.ToLower(relationShip)
 	fmt.Printf("search(%v), relation: %v\n", member, relationShip)
 	switch relationShip {
-	case "paternalUncle":
+	case "paternaluncle":
 		return unclesAndaunts(member, MALE, MALE)
-	case "paternalAunt":
+	case "paternalaunt":
 		return unclesAndaunts(member, MALE, FEMALE)
-	case "maternalAunt":
+	case "maternalaunt":
 		return unclesAndaunts(member, FEMALE, FEMALE)
-	case "maternalUncle":
+	case "maternaluncle":
 		return unclesAndaunts(member, FEMALE, MALE)
-	case "brotherInLaw":
+	case "brotherinlaw", "brother-in-law":
 		return inLaws(member, MALE)
-	case "sisterinLaw":
+	case "sisterinlaw", "sister-in-law":
 		return inLaws(member, FEMALE)
 	case "cousins":
 		return cousins(member)
