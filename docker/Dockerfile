@@ -8,7 +8,7 @@ WORKDIR /go/src/github.com/sbsw-apiserver-exercise
 
 COPY . ./
 
-RUN GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o /apiserver src/main.go
+RUN GOOS=linux GOARCH=amd64 go build -a -ldflags '-extldflags "-static"' -o /apiserver src/*.go
 
 
 
