@@ -17,6 +17,21 @@ Change these in `Service` section of Kubernetes manifest file `manifests/apiserv
 
 Oncee the script is updated with required variables / external IP/port details, run `automation/setup.sh`, this script must be executed from the root/top-most directory of the repo
 
+## Testing/Usage of the API service ##
+
+URL format:
+http://192.168.99.100:8082/query?Person=Jata&Relation=PaternalUncle
+
+Where `Person` is the name of the person queried, and `Relation` is the type of relationship information required.  `Relation` can be one of the following values:
+
+* `paternaluncle`
+* `paternalaunt`
+* `maternalaunt`
+* `maternaluncle`
+* `brotherinlaw` or `brother-in-law`
+* `sisterinlaw` or `sister-in-law`
+* `cousins`
+
 ## Other details ##
 
 * Part 1 - Problem 1 code in `src/`
