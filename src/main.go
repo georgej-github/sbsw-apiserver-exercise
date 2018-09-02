@@ -1,3 +1,4 @@
+//API server adapted from https://pragmacoders.com/building-a-json-api-in-golang/
 package main
 
 import (
@@ -11,10 +12,12 @@ import (
 )
 
 func main() {
+	Populate()
+
 	var router = mux.NewRouter()
 	router.HandleFunc("/healthcheck", healthCheck).Methods("GET")
-	router.HandleFunc("/message", handleQryMessage).Methods("GET")
-	router.HandleFunc("/m/{msg}", handleUrlMessage).Methods("GET")
+	router.HandleFunc("/query", handleQryMessage).Methods("GET")
+	//router.HandleFunc("/m/{msg}", handleURLMessage).Methods("GET")
 
 	headersOk := handlers.AllowedHeaders([]string{"Authorization"})
 	originsOk := handlers.AllowedOrigins([]string{"*"})
@@ -26,12 +29,22 @@ func main() {
 
 func handleQryMessage(w http.ResponseWriter, r *http.Request) {
 	vars := r.URL.Query()
-	message := vars.Get("msg")
+	//message := vars.Get("msg")
+	person := vars.Get("Person")
+	relation := vars.Get("Relation")
 
-	json.NewEncoder(w).Encode(map[string]string{"message": message})
+	fmt.Printf("Searching for %s %s\n", person, relation)
+	relatives := search(person, relation)
+	if relatives == nil || len(relatives) == 0 {
+		relatives = append(relatives, "none")
+	}
+
+	json.NewEncoder(w).Encode(map[string][]string{"message": relatives})
+
+	//json.NewEncoder(w).Encode(map[string]string{"message": message})
 }
 
-func handleUrlMessage(w http.ResponseWriter, r *http.Request) {
+func handleURLMessage(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	message := vars["msg"]
 
